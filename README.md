@@ -28,9 +28,9 @@ tests                 Vitest coverage for shared logic, SDK, migrations
 
 ## Current Production Status
 
-The landing and dashboard are live. The API is Docker-ready but still needs a
-valid Railway deployment, Postgres, Redis, JWT keys, Solana RPC, and DNS for
-`api.fluxroute.xyz`.
+The landing, dashboard, and API are live on the production domains above. The
+API runs on Railway with Postgres, Redis, RS256 JWT keys, Helius Solana RPC,
+database migrations, and restricted CORS configured.
 
 Do not treat Vercel preview URLs as canonical. Public links, SEO metadata, docs,
 and dashboard configuration should use the production domains above.

@@ -6,7 +6,7 @@ Audit date: 2026-07-03
 
 - **Landing site:** Next.js app in `fluxroute-landing`, deployed on Vercel. Verified `https://fluxroute.xyz/` returned HTTP 200.
 - **Dashboard:** Next.js app in `apps/dashboard`, deployed on Vercel. Verified `https://dashboard.fluxroute.xyz/dashboard` returned HTTP 200.
-- **API:** Fastify app in `apps/api`, deployed on Railway with Postgres, Redis, JWT keys, and Helius Solana RPC configured. Railway healthcheck passes. `api.fluxroute.xyz` custom domain is created but not verified until Cloudflare DNS records are added.
+- **API:** Fastify app in `apps/api`, deployed on Railway with Postgres, Redis, JWT keys, and Helius Solana RPC configured. Railway healthcheck passes and `https://api.fluxroute.xyz/api/health` returns HTTP 200.
 - **Database:** Drizzle/Postgres schema and migration runner in `packages/database`.
 - **Cache:** Redis is used for payment status cache and rate limiting support.
 - **MCP server:** Stdio MCP server in `apps/mcp-server`; calls REST API for service listing, paid call execution, and budget lookup.
@@ -22,19 +22,21 @@ Audit date: 2026-07-03
 
 - `https://fluxroute.xyz/`: HTTP 200.
 - `https://dashboard.fluxroute.xyz/dashboard`: HTTP 200.
-- `https://api.fluxroute.xyz/api/health`: pending Cloudflare DNS verification.
-- Railway API service is online at its Railway service domain; local DNS cannot resolve Railway public domains from this machine, but Railway deployment logs show `/api/health` returning 200.
+- `https://api.fluxroute.xyz/api/health`: HTTP 200.
+- API auth register/login smoke test passed on the canonical API domain.
+- Dashboard-origin CORS preflight to `https://api.fluxroute.xyz/api/services` returns HTTP 204 with `Access-Control-Allow-Origin: https://dashboard.fluxroute.xyz`.
+- Browser smoke test confirmed unauthenticated `/dashboard/provider` redirects to `/login?next=%2Fdashboard%2Fprovider`, and a throwaway authenticated login reaches the provider dashboard.
 - Production database migrations completed through the Railway Postgres TCP proxy.
 - No `.github` workflow existed before this audit.
 
 ## Broken Or Incomplete Items
 
-- API backend is live on Railway, but not reachable at the canonical API domain until DNS is added.
-- Dashboard service registry cannot load production data until `NEXT_PUBLIC_API_URL` points to a live API and CORS allows the dashboard domain.
-- Cloudflare DNS for `api.fluxroute.xyz` is missing or not propagated.
+- API backend is live on Railway and reachable at the canonical API domain.
+- Dashboard service registry can reach the production API domain; there are currently no registered provider services in production.
+- Cloudflare DNS for `api.fluxroute.xyz` is configured and Railway TLS is valid.
 - Helius Solana RPC is configured in Railway.
 - Vercel-to-GitHub auto deploy previously failed because the GitHub app did not have repository access.
-- Dashboard has no real logged-in session flow or route protection in the frontend shell; server-side API auth exists.
+- Dashboard protected routes redirect unauthenticated visitors to login, and email/password login reaches protected pages.
 - Wallet auth accepts caller-provided nonces; production should add server-issued nonce persistence to reduce replay risk.
 - Docs were minimal and did not expose an actual `/docs` route.
 
@@ -47,7 +49,7 @@ Audit date: 2026-07-03
 ## Security Review
 
 - Good: bcrypt password hashes, bcrypt API key hashes, RS256 JWT, Zod validation, Fastify rate limit, secure headers, HTTPS-only provider URLs by default, transaction signature uniqueness, payment memo binding.
-- Needs work: server-issued wallet auth nonces, request IDs in logs, production error monitoring, API readiness check that includes Postgres/Redis, Railway secret rotation, Cloudflare API/DNS verification, stricter preview environment separation.
+- Needs work: server-issued wallet auth nonces, request IDs in logs, production error monitoring, API readiness check that includes Postgres/Redis, Railway secret rotation, stricter preview environment separation.
 - Dependency audit is not clean. Remaining fixes require breaking upgrades across Next.js, Drizzle ORM, Fastify, Solana web3 transitive dependencies, and MCP SDK.
 - Secrets are ignored by `.gitignore`; generated PEM files are not tracked.
 
@@ -60,10 +62,8 @@ Audit date: 2026-07-03
 
 ## Priority Order
 
-1. Add Cloudflare DNS for `api.fluxroute.xyz` and verify TLS.
-2. Smoke test API health, registry, auth, payment negotiation, dashboard registry, and CORS.
-3. Verify dashboard login/register against `https://api.fluxroute.xyz`.
-4. Add server-issued wallet login nonces and request IDs.
-5. Expand dashboard authenticated UI and protected routes only after API auth/session integration is fully verified.
-6. Add server-issued wallet login nonces and request IDs.
-7. Expand dashboard authenticated UI and protected routes only after API auth/session integration is real.
+1. Add server-issued wallet login nonces and request IDs.
+2. Expand authenticated dashboard API integrations beyond login and empty states.
+3. Add production error monitoring and a readiness endpoint that checks Postgres and Redis.
+4. Triage dependency audit advisories that require breaking upgrades.
+5. Rotate secrets shared during launch setup.
