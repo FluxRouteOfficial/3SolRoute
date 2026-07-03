@@ -6,7 +6,7 @@ Audit date: 2026-07-03
 
 - **Landing site:** Next.js app in `fluxroute-landing`, deployed on Vercel. Verified `https://fluxroute.xyz/` returned HTTP 200.
 - **Dashboard:** Next.js app in `apps/dashboard`, deployed on Vercel. Verified `https://dashboard.fluxroute.xyz/dashboard` returned HTTP 200.
-- **API:** Fastify app in `apps/api`, Docker-ready, requires Postgres, Redis, JWT keys, and Solana RPC. `https://api.fluxroute.xyz/api/health` does not resolve yet.
+- **API:** Fastify app in `apps/api`, deployed on Railway with Postgres, Redis, JWT keys, and Helius Solana RPC configured. Railway healthcheck passes. `api.fluxroute.xyz` custom domain is created but not verified until Cloudflare DNS records are added.
 - **Database:** Drizzle/Postgres schema and migration runner in `packages/database`.
 - **Cache:** Redis is used for payment status cache and rate limiting support.
 - **MCP server:** Stdio MCP server in `apps/mcp-server`; calls REST API for service listing, paid call execution, and budget lookup.
@@ -22,17 +22,17 @@ Audit date: 2026-07-03
 
 - `https://fluxroute.xyz/`: HTTP 200.
 - `https://dashboard.fluxroute.xyz/dashboard`: HTTP 200.
-- `https://api.fluxroute.xyz/api/health`: DNS unresolved.
-- Railway CLI token provided in chat was rejected by Railway as unauthorized in both supported token modes: `RAILWAY_TOKEN` and `RAILWAY_API_TOKEN`.
+- `https://api.fluxroute.xyz/api/health`: pending Cloudflare DNS verification.
+- Railway API service is online at its Railway service domain; local DNS cannot resolve Railway public domains from this machine, but Railway deployment logs show `/api/health` returning 200.
+- Production database migrations completed through the Railway Postgres TCP proxy.
 - No `.github` workflow existed before this audit.
 
 ## Broken Or Incomplete Items
 
-- API backend is not live at the canonical API domain.
+- API backend is live on Railway, but not reachable at the canonical API domain until DNS is added.
 - Dashboard service registry cannot load production data until `NEXT_PUBLIC_API_URL` points to a live API and CORS allows the dashboard domain.
 - Cloudflare DNS for `api.fluxroute.xyz` is missing or not propagated.
-- Railway deployment cannot be completed with the currently supplied token.
-- Production Solana RPC URL has not been supplied.
+- Helius Solana RPC is configured in Railway.
 - Vercel-to-GitHub auto deploy previously failed because the GitHub app did not have repository access.
 - Dashboard has no real logged-in session flow or route protection in the frontend shell; server-side API auth exists.
 - Wallet auth accepts caller-provided nonces; production should add server-issued nonce persistence to reduce replay risk.
@@ -60,10 +60,10 @@ Audit date: 2026-07-03
 
 ## Priority Order
 
-1. Deploy API to Railway with valid token, Postgres, Redis, JWT keys, and Solana RPC.
-2. Add Cloudflare DNS for `api.fluxroute.xyz` and verify TLS.
-3. Update Vercel dashboard env to `NEXT_PUBLIC_API_URL=https://api.fluxroute.xyz`.
-4. Run migrations on Railway Postgres.
-5. Smoke test API health, registry, auth, payment negotiation, dashboard registry, and CORS.
+1. Add Cloudflare DNS for `api.fluxroute.xyz` and verify TLS.
+2. Smoke test API health, registry, auth, payment negotiation, dashboard registry, and CORS.
+3. Verify dashboard login/register against `https://api.fluxroute.xyz`.
+4. Add server-issued wallet login nonces and request IDs.
+5. Expand dashboard authenticated UI and protected routes only after API auth/session integration is fully verified.
 6. Add server-issued wallet login nonces and request IDs.
 7. Expand dashboard authenticated UI and protected routes only after API auth/session integration is real.
