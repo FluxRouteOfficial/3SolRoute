@@ -15,15 +15,16 @@ const allowedOrigins = (process.env.CORS_ORIGIN ?? '')
   .filter(Boolean);
 
 await app.register(cors, {
-  origin: allowedOrigins.length
-    ? (origin, callback) => {
-        if (!origin || allowedOrigins.includes(origin)) {
-          callback(null, true);
-          return;
-        }
-        callback(null, false);
-      }
-    : false,
+  delegator: (req, callback) => {
+    const origin = req.headers.origin;
+    const isAllowedOrigin =
+      typeof origin === 'string' && allowedOrigins.includes(origin);
+
+    callback(null, {
+      origin: !origin || isAllowedOrigin,
+      credentials: true,
+    });
+  },
 });
 await app.register(rateLimit, { max: 100, timeWindow: '1 minute' });
 
