@@ -10,7 +10,7 @@ import { healthRoutes } from './routes/health.js';
 const app = Fastify({ logger: true });
 
 const allowedOrigins = (process.env.CORS_ORIGIN ?? '')
-  .split(',')
+  .split(/[,\s]+/)
   .map((origin) => origin.trim())
   .filter(Boolean);
 
