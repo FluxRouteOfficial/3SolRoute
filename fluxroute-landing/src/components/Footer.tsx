@@ -3,7 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { Logo } from "@/components/Logo";
 
 const GITHUB_URL = "https://github.com/FluxRouteOfficial/FluxRoute";
-const X_URL = "https://x.com/fluxroute";
+const X_URL = "https://x.com/FluxRoutexyz";
 const CONTACT_EMAIL = "hello@fluxroute.xyz";
 
 type FooterLink = { label: string; href: string; external?: boolean };

@@ -38,6 +38,8 @@ export const metadata: Metadata = {
     title: "FluxRoute - MCP Routing for Solana Payments",
     description:
       "A Solana-native AI microservice routing layer. Connect your agent once and pay per call in SOL or USDC-SPL.",
+    site: "@FluxRoutexyz",
+    creator: "@FluxRoutexyz",
     images: ["/og-image.png"],
   },
 };
